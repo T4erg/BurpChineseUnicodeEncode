@@ -18,6 +18,8 @@ print("""# @Author  : T4erg
 # @Site    : https://blog.tinydawn.com/
 # @File    : BurpChineseUnicodeEncode.py
 # @Time    : 20/8/2017 9:40 PM
+
+# @Version  : 0.2.2
     """)
 
 class BurpExtender(IBurpExtender, IHttpListener):
@@ -39,7 +41,7 @@ class BurpExtender(IBurpExtender, IHttpListener):
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
 
         # determine what tool we would like to pass though our extension:
-        if toolFlag == 64 or toolFlag == 16 or toolFlag == 32:
+        if toolFlag == 64 or toolFlag == 16 or toolFlag == 32:# or toolFlag == callbacks.TOOL_REPEATER:
             # determine if request or response:
             if not messageIsRequest:#only handle responses
                 response = messageInfo.getResponse()
@@ -47,17 +49,12 @@ class BurpExtender(IBurpExtender, IHttpListener):
                 headers = analyzedResponse.getHeaders()
                 new_headers = []
                 for header in headers:
-                    if header.startswith("Content-Type:"):
-                        new_headers.append(header.replace('iso-8859-1', 'utf-8'))
-                    else:
+                    if header is not None:
+                        re.sub(r"iso-8859-1|GBK", "UTF-8", header, flags=re.I)
                         new_headers.append(header)
                 print(new_headers)
-
                 body = response[analyzedResponse.getBodyOffset():]
                 body_string = body.tostring()
-                body_string=body_string.decode('unicode_escape').encode('utf8')
+                body_string=body_string.decode("unicode_escape").encode("utf8")
                 messageInfo.setResponse(self._helpers.buildHttpMessage(new_headers,
                                         self._helpers.bytesToString(body_string)))
-
-
-
